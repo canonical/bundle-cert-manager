@@ -1,0 +1,13 @@
+options:
+  port:
+    type: int
+    default: 9402
+    description: HTTP port
+  issuers:
+    type: string
+    description: |
+      Issuers to create by default for cert-manager. Expects Issuers to be defined
+      in the form of a `name: spec` YAML mapping.
+    default: |
+      cert-manager-default:
+        selfSigned: {}

@@ -1,0 +1,10 @@
+bundle: kubernetes
+applications:
+  cert-manager-webhook:
+    charm: cs:~kubeflow-charmers/cert-manager-webhook
+    source: ./charms/cert-manager-webhook
+    scale: 1
+  cert-manager-controller:
+    charm: cs:~kubeflow-charmers/cert-manager-controller
+    source: ./charms/cert-manager-controller
+    scale: 1
