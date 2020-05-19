@@ -26,7 +26,7 @@ jobs:
         sudo usermod -a -G microk8s runner
         sudo microk8s.enable dns storage rbac
         sudo juju bootstrap microk8s uk8s
-        sudo juju add-model cert-manager microk8s
+        sudo juju add-model cert-manager microk8s --config update-status-hook-interval=30s
         sudo juju bundle deploy --build
         sudo juju wait -wv
 
