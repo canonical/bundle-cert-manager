@@ -37,11 +37,20 @@ jobs:
     - name: Get pod statuses
       run: sudo microk8s.kubectl get all -A
       if: failure()
+    - name: Get juju status
+      run: sudo juju status
+      if: failure()
     - name: Describe deployments
       run: sudo microk8s.kubectl describe deployments -A
       if: failure()
     - name: Describe replicasets
       run: sudo microk8s.kubectl describe replicasets -A
+      if: failure()
+    - name: Get cert-manager-controller operator logs
+      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-controller
+      if: failure()
+    - name: Get cert-manager-webhook operator logs
+      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-webhook
       if: failure()
     - name: Get cert-manager-controller logs
       run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-controller
