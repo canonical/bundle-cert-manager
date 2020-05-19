@@ -43,6 +43,12 @@ jobs:
     - name: Describe replicasets
       run: sudo microk8s.kubectl describe replicasets -A
       if: failure()
+    - name: Get cert-manager-controller logs
+      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-controller
+      if: failure()
+    - name: Get cert-manager-webhook logs
+      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-webhook
+      if: failure()
     - name: Get snap logs
       run: sudo snap logs -n 300 microk8s
       if: failure()
