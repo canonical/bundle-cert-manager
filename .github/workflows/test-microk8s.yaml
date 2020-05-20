@@ -35,7 +35,8 @@ jobs:
         sudo juju wait -wv -t 60
 
     - name: Test cert-manager
-      run: ls -lath
+      run: |
+        sudo microk8s.kubectl get issuers
 
     # Debug failures
     - name: Get pod statuses
