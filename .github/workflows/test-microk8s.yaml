@@ -37,6 +37,8 @@ jobs:
     - name: Test cert-manager
       run: |
         set -eux
+        sudo juju config cert-manager-controller issuers=$(< test-certs.yaml)
+        sudo microk8s.kubectl wait --for=condition=ready -ncert-manager issuer/self-signed-test
         sudo microk8s.kubectl get issuers -A
         sudo microk8s.kubectl get issuers -A -oyaml
 
