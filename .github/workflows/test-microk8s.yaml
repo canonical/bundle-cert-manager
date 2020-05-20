@@ -28,7 +28,7 @@ jobs:
         sudo juju bootstrap microk8s uk8s
         sudo juju add-model cert-manager microk8s --config update-status-hook-interval=30s
         sudo juju bundle deploy --build
-        sudo juju wait -wv
+        sudo juju wait -wv -t 60
 
     - name: Test cert-manager
       run: ls -lath
