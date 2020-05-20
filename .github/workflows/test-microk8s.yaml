@@ -21,6 +21,7 @@ jobs:
         sudo snap install juju --classic
         sudo snap install juju-helpers --classic --channel edge
         sudo snap install juju-wait --classic
+        sudo snap install yq
 
     - name: Deploy cert-manager
       run: |
@@ -37,7 +38,7 @@ jobs:
     - name: Test cert-manager
       run: |
         set -eux
-        sudo juju config cert-manager-controller issuers=$(< test-certs.yaml)
+        sudo juju config cert-manager-controller issuers=$(yq -j r test-certs.yaml)
         sudo microk8s.kubectl wait --for=condition=ready -ncert-manager issuer/self-signed-test
         sudo microk8s.kubectl get issuers -A
         sudo microk8s.kubectl get issuers -A -oyaml
