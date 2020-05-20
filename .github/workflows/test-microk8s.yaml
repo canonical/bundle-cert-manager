@@ -15,6 +15,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        set -eux
         sudo snap install microk8s --classic
         sudo snap install charm --classic
         sudo snap install juju --classic
@@ -23,11 +24,14 @@ jobs:
 
     - name: Deploy cert-manager
       run: |
+        set -eux
         sudo usermod -a -G microk8s runner
         sudo microk8s.enable dns storage rbac
         sudo juju bootstrap microk8s uk8s
-        sudo juju add-model cert-manager microk8s --config update-status-hook-interval=30s
+        sudo juju add-model cert-manager microk8s --config update-status-hook-interval=10s
         sudo juju bundle deploy --build
+        sleep 10
+        sudo microk8s.kubectl patch role -n cert-manager cert-manager-webhook-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"cert-manager-webhook-operator"},"rules":[{"apiGroups":["*"],"resources":["*"],"verbs":["*"]}]}'
         sudo juju wait -wv -t 60
 
     - name: Test cert-manager
