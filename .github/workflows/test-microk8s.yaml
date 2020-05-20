@@ -36,7 +36,9 @@ jobs:
 
     - name: Test cert-manager
       run: |
-        sudo microk8s.kubectl get issuers
+        set -eux
+        sudo microk8s.kubectl get issuers -A
+        sudo microk8s.kubectl get issuers -A -oyaml
 
     # Debug failures
     - name: Get pod statuses
