@@ -38,7 +38,6 @@ jobs:
     - name: Test cert-manager
       run: |
         set -eux
-        sudo juju config cert-manager-controller issuers=$(yq -j r test-certs.yaml)
         sudo juju config cert-manager-controller self-signed-issuers=$(yq -j r test-certs-self-signed.yaml)
         sudo juju config cert-manager-controller ca-issuers=$(yq -j r test-certs-ca.yaml)
         sudo juju config cert-manager-controller acme-issuers=$(yq -j r test-certs-acme.yaml)
