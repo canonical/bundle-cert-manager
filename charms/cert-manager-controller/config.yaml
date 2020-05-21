@@ -3,11 +3,17 @@ options:
     type: int
     default: 9402
     description: HTTP port
-  issuers:
+  self-signed-issuers:
     type: string
     description: |
-      Issuers to create by default for cert-manager. Expects Issuers to be defined
-      in the form of a `name: spec` YAML mapping.
+      Self-signed issuers. See https://cert-manager.io/docs/configuration/selfsigned/
     default: |
       cert-manager-default:
-        selfSigned: {}
+  ca-issuers:
+    type: string
+    description: CA issuers. See https://cert-manager.io/docs/configuration/ca/
+    default: '{}'
+  acme-issuers:
+    type: string
+    description: ACME issuers. See https://cert-manager.io/docs/configuration/acme/
+    default: '{}'

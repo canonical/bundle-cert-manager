@@ -39,9 +39,17 @@ jobs:
       run: |
         set -eux
         sudo juju config cert-manager-controller issuers=$(yq -j r test-certs.yaml)
+        sudo juju config cert-manager-controller self-signed-issuers=$(yq -j r test-certs-self-signed.yaml)
+        sudo juju config cert-manager-controller ca-issuers=$(yq -j r test-certs-ca.yaml)
+        sudo juju config cert-manager-controller acme-issuers=$(yq -j r test-certs-acme.yaml)
         sleep 10
-        sudo microk8s.kubectl wait --for=condition=ready -ncert-manager issuer/self-signed-test
-        sudo microk8s.kubectl get -ncert-manager issuers self-signed-test ca-keypair-test venafi-test lets-encrypt-test
+
+        # Wait for the self-signed and ca Issuers to become ready
+        sudo microk8s.kubectl wait --for=condition=ready -ncert-manager issuer ss-foo ss-bar ss-baz ca-secret-included ca-secret-referenced
+
+        # It's hard to set up github actions for LE, so just verify that the Issuer
+        # was created, even though it will be in an error state.
+        sudo microk8s.kubectl get -ncert-manager issuers lets-encrypt-test
 
     # Debug failures
     - name: Get pod statuses

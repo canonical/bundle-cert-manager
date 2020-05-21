@@ -1,0 +1,5 @@
+ss-foo:
+ss-bar:
+ss-baz:
+  crlDistributionPoints:
+  - "http://example.com"

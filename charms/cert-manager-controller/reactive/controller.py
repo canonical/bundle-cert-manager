@@ -23,6 +23,62 @@ def update_image():
     clear_flag("charm.started")
 
 
+def get_issuers():
+    config = dict(hookenv.config())
+
+    ss_issuers = [
+        {
+            "apiVersion": "cert-manager.io/v1alpha2",
+            "kind": "Issuer",
+            "metadata": {"name": name},
+            "spec": {"selfSigned": spec or {}},
+        }
+        for name, spec in yaml.safe_load(config["self-signed-issuers"]).items()
+    ]
+
+    ca_issuers = [
+        {
+            "apiVersion": "cert-manager.io/v1alpha2",
+            "kind": "Issuer",
+            "metadata": {"name": name},
+            "spec": {
+                "ca": {
+                    "secretName": spec["ca"].get("secretName") or name,
+                    "crlDistributionPoints": spec["ca"].get(
+                        "crlDistributionPoints", []
+                    ),
+                }
+            },
+        }
+        for name, spec in yaml.safe_load(config["ca-issuers"]).items()
+    ]
+
+    ca_secrets = [
+        {
+            "name": spec["ca"].get("secretName") or name,
+            "type": "kubernetes.io/tls",
+            "data": spec["secret"],
+        }
+        for name, spec in yaml.safe_load(config["ca-issuers"]).items()
+        if "secret" in spec
+    ]
+
+    acme_issuers = [
+        {
+            "apiVersion": "cert-manager.io/v1alpha2",
+            "kind": "Issuer",
+            "metadata": {"name": name},
+            "spec": spec,
+        }
+        for name, spec in yaml.safe_load(config["acme-issuers"]).items()
+    ]
+
+    return (
+        ss_issuers + ca_issuers + acme_issuers,
+        ca_secrets,
+    )
+
+
 @when("layer.docker-resource.oci-image.available")
 @when_not("charm.started")
 def start_charm():
@@ -31,6 +87,8 @@ def start_charm():
     image_info = layer.docker_resource.get_info("oci-image")
 
     namespace = os.environ["JUJU_MODEL_NAME"]
+
+    issuers, secrets = get_issuers()
 
     layer.caas_base.pod_spec_set(
         {
@@ -158,19 +216,8 @@ def start_charm():
                         Path("resources/crds.yaml").read_text()
                     )
                 },
-                "customResources": {
-                    "issuers.cert-manager.io": [
-                        {
-                            "apiVersion": "cert-manager.io/v1alpha2",
-                            "kind": "Issuer",
-                            "metadata": {"name": name},
-                            "spec": spec,
-                        }
-                        for name, spec in yaml.safe_load(
-                            hookenv.config("issuers")
-                        ).items()
-                    ]
-                },
+                "customResources": {"issuers.cert-manager.io": issuers},
+                "secrets": secrets,
             }
         },
     )
