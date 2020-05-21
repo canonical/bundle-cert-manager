@@ -41,8 +41,7 @@ jobs:
         sudo juju config cert-manager-controller issuers=$(yq -j r test-certs.yaml)
         sleep 10
         sudo microk8s.kubectl wait --for=condition=ready -ncert-manager issuer/self-signed-test
-        sudo microk8s.kubectl get issuers -A
-        sudo microk8s.kubectl get issuers -A -oyaml
+        sudo microk8s.kubectl get -ncert-manager issuers self-signed-test ca-keypair-test venafi-test lets-encrypt-test
 
     # Debug failures
     - name: Get pod statuses
