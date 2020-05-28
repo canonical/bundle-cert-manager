@@ -13,6 +13,48 @@ You can deploy these charms from the charm store:
 A default self-signed Issuer will be created for you. If you wish to create additional
 Issuers, you can configure the `cert-manager-controller` charm.
 
+You will also need to modify the role associated with the `cert-manager-webhook` charm.
+You can store this file file somewhere and run `kubectl apply -n cert-manager -f $FILE`:
+
+```json
+{
+  "apiVersion": "rbac.authorization.k8s.io/v1",
+  "kind": "Role",
+  "metadata": {
+    "name": "cert-manager-webhook-operator"
+  },
+  "rules": [
+    {
+      "apiGroups": [
+        ""
+      ],
+      "resources": [
+        "pods",
+        "secret"
+      ],
+      "verbs": [
+        "get",
+        "list",
+      ]
+    },
+    {
+      "apiGroups": [
+        ""
+      ],
+      "resources": [
+        "pods/exec"
+      ],
+      "verbs": [
+        "create"
+      ]
+    }
+  ]
+}
+```
+
+Or run `kubectl edit -n cert-manager role/cert-manager-webhook-operator` and edit the file
+manually.
+
 Configuring
 -----------
 

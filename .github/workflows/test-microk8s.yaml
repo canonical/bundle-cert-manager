@@ -32,7 +32,7 @@ jobs:
         sudo juju add-model cert-manager microk8s --config update-status-hook-interval=10s
         sudo juju bundle deploy --build
         sleep 10
-        sudo microk8s.kubectl patch role -n cert-manager cert-manager-webhook-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"cert-manager-webhook-operator"},"rules":[{"apiGroups":["*"],"resources":["*"],"verbs":["*"]}]}'
+        sudo microk8s.kubectl patch role -n cert-manager cert-manager-webhook-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"cert-manager-webhook-operator"},"rules":[{"apiGroups":[""],"resources":["pods", "secrets"],"verbs":["get", "list"]},{"apiGroups":[""],"resources":["pods/exec"],"verbs":["create"]}]}'
         sudo juju wait -wv -t 60
 
     - name: Test cert-manager
@@ -62,6 +62,9 @@ jobs:
       if: failure()
     - name: Describe replicasets
       run: sudo microk8s.kubectl describe replicasets -A
+      if: failure()
+    - name: Describe pods
+      run: sudo microk8s.kubectl describe pods -A
       if: failure()
     - name: Get cert-manager-controller operator logs
       run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-controller
