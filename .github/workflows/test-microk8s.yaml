@@ -6,17 +6,21 @@ on:
 
 jobs:
   build:
-    name: Deploy to microk8s
+    name: Deploy to MicroK8s
     runs-on: ubuntu-latest
 
     steps:
     - name: Check out code
       uses: actions/checkout@v2
 
+    - uses: balchua/microk8s-actions@v0.2.2
+      with:
+        channel: 'latest/stable'
+        addons: '["dns", "storage", "rbac"]'
+
     - name: Install dependencies
       run: |
         set -eux
-        sudo snap install microk8s --classic
         sudo snap install charm --classic
         sudo snap install juju --classic
         sudo snap install juju-helpers --classic --channel edge
@@ -26,59 +30,60 @@ jobs:
     - name: Deploy cert-manager
       run: |
         set -eux
-        sudo usermod -a -G microk8s runner
-        sudo microk8s.enable dns storage rbac
-        sudo juju bootstrap microk8s uk8s
-        sudo juju add-model cert-manager microk8s --config update-status-hook-interval=10s
-        sudo juju bundle deploy --build
+        sg microk8s -c 'juju bootstrap microk8s uk8s'
+        juju add-model cert-manager microk8s --config update-status-hook-interval=10s
+        juju bundle deploy --build
         sleep 10
-        sudo microk8s.kubectl patch role -n cert-manager cert-manager-webhook-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"cert-manager-webhook-operator"},"rules":[{"apiGroups":[""],"resources":["pods", "secrets"],"verbs":["get", "list"]},{"apiGroups":[""],"resources":["pods/exec"],"verbs":["create"]}]}'
-        sudo juju wait -wv -t 60
+        kubectl patch role -n cert-manager cert-manager-webhook-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"cert-manager-webhook-operator"},"rules":[{"apiGroups":[""],"resources":["pods", "secrets"],"verbs":["get", "list"]},{"apiGroups":[""],"resources":["pods/exec"],"verbs":["create"]}]}'
+        juju wait -wv -t 60
 
     - name: Test cert-manager
       run: |
         set -eux
-        sudo juju config cert-manager-controller self-signed-issuers=$(yq -j r test-certs-self-signed.yaml)
-        sudo juju config cert-manager-controller ca-issuers=$(yq -j r test-certs-ca.yaml)
-        sudo juju config cert-manager-controller acme-issuers=$(yq -j r test-certs-acme.yaml)
+        juju config cert-manager-controller self-signed-issuers=$(yq -j r test-certs-self-signed.yaml)
+        juju config cert-manager-controller ca-issuers=$(yq -j r test-certs-ca.yaml)
+        juju config cert-manager-controller acme-issuers=$(yq -j r test-certs-acme.yaml)
         sleep 10
 
         # Wait for the self-signed and ca Issuers to become ready
-        sudo microk8s.kubectl wait --for=condition=ready -ncert-manager issuer ss-foo ss-bar ss-baz ca-secret-included ca-secret-referenced
+        kubectl wait --for=condition=ready -ncert-manager issuer ss-foo ss-bar ss-baz ca-secret-included ca-secret-referenced
 
         # It's hard to set up github actions for LE, so just verify that the Issuer
         # was created, even though it will be in an error state.
-        sudo microk8s.kubectl get -ncert-manager issuers lets-encrypt-test
+        kubectl get -ncert-manager issuers lets-encrypt-test
 
-    # Debug failures
     - name: Get pod statuses
-      run: sudo microk8s.kubectl get all -A
-      if: failure()
-    - name: Get juju status
-      run: sudo juju status
-      if: failure()
-    - name: Describe deployments
-      run: sudo microk8s.kubectl describe deployments -A
-      if: failure()
-    - name: Describe replicasets
-      run: sudo microk8s.kubectl describe replicasets -A
-      if: failure()
-    - name: Describe pods
-      run: sudo microk8s.kubectl describe pods -A
-      if: failure()
-    - name: Get cert-manager-controller operator logs
-      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-controller
-      if: failure()
-    - name: Get cert-manager-webhook operator logs
-      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-webhook
-      if: failure()
-    - name: Get cert-manager-controller logs
-      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-controller
-      if: failure()
-    - name: Get cert-manager-webhook logs
-      run: sudo microk8s.kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-webhook
-      if: failure()
-    - name: Get snap logs
-      run: sudo snap logs -n 300 microk8s
+      run: kubectl get all -A
       if: failure()
 
+    - name: Get juju status
+      run: juju status
+      if: failure()
+
+    - name: Describe deployments
+      run: kubectl describe deployments -A
+      if: failure()
+
+    - name: Describe replicasets
+      run: kubectl describe replicasets -A
+      if: failure()
+
+    - name: Describe pods
+      run: kubectl describe pods -A
+      if: failure()
+
+    - name: Get cert-manager-controller operator logs
+      run: kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-controller
+      if: failure()
+
+    - name: Get cert-manager-webhook operator logs
+      run: kubectl logs -n cert-manager --tail 1000 -ljuju-operator=cert-manager-webhook
+      if: failure()
+
+    - name: Get cert-manager-controller logs
+      run: kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-controller
+      if: failure()
+
+    - name: Get cert-manager-webhook logs
+      run: kubectl logs -n cert-manager --tail 1000 -ljuju-app=cert-manager-webhook
+      if: failure()
