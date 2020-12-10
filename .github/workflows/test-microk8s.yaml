@@ -35,7 +35,7 @@ jobs:
         juju bundle deploy --build
         sleep 10
         kubectl patch role -n cert-manager cert-manager-webhook-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"cert-manager-webhook-operator"},"rules":[{"apiGroups":[""],"resources":["pods", "secrets"],"verbs":["get", "list"]},{"apiGroups":[""],"resources":["pods/exec"],"verbs":["create"]}]}'
-        juju wait -wv -t 60
+        juju wait -wv -t 300
 
     - name: Test cert-manager
       run: |
