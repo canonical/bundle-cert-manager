@@ -8,7 +8,7 @@ Deploying
 
 You can deploy these charms from the charm store:
 
-    juju deploy cs:~kubeflow-charmers/bundle/cert-manager
+    juju deploy cert-manager
 
 A default self-signed Issuer will be created for you. If you wish to create additional
 Issuers, you can configure the `cert-manager-controller` charm.
