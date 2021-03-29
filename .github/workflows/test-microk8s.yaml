@@ -40,9 +40,9 @@ jobs:
     - name: Test cert-manager
       run: |
         set -eux
-        juju config cert-manager-controller self-signed-issuers=$(yq -j r test-certs-self-signed.yaml)
-        juju config cert-manager-controller ca-issuers=$(yq -j r test-certs-ca.yaml)
-        juju config cert-manager-controller acme-issuers=$(yq -j r test-certs-acme.yaml)
+        juju config cert-manager-controller self-signed-issuers=$(yq eval -j -I0 test-certs-self-signed.yaml)
+        juju config cert-manager-controller ca-issuers=$(yq eval -j -I0 test-certs-ca.yaml)
+        juju config cert-manager-controller acme-issuers=$(yq eval -j -I0 test-certs-acme.yaml)
         sleep 10
 
         # Wait for the self-signed and ca Issuers to become ready
