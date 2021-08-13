@@ -137,4 +137,4 @@ as an argument as shown above, or like this:
     # Conigure Juju like this:
     juju config cert-manager-controller acme-issuers=$(yq -j r le-issuers.yaml)
 
-See (test-certs-acme.yaml)[test-certs-acme.yaml] for more examples.
+See [test-certs-acme.yaml](test-certs-acme.yaml) for more examples.
